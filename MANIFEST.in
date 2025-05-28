@@ -1,0 +1,8 @@
+include imcar/gui/icon.png
+include imcar/gui/icon.ico
+include imcar/gui/MCA_simple_UI.ui
+include imcar/gui/snapshot_evolution.ui
+include imcar/gui/snapshot_info.ui
+include imcar/gui/snapshot_view.ui
+include imcar/gui/calibration_editor.ui
+include imcar/gui/AddDevice.md
