@@ -1,0 +1,22 @@
+
+localhost:40405/<input type="text" id="urlInput" placeholder="new_snapshot/test" />
+<button onclick="sendPostRequest()">Submit</button>
+
+<div id="response" style="background-color: lightgray; min-height: 40px; white-space: pre;"></div>
+
+<script>
+async function sendPostRequest() {
+    const url = "http://localhost:40405/" + document.getElementById('urlInput').value;
+    const responseDiv = document.getElementById('response');
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+        });
+
+        const data = await response.text();
+        responseDiv.textContent = `Response:\n${data}`;
+    } catch (error) {
+        responseDiv.textContent = `Error:\n${error}`;
+    }
+}
+</script>

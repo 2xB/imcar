@@ -58,6 +58,138 @@ class OneShotSignal:
     def emit(self):
         self.emitted = True
 
+
+import json
+import http.server
+import socketserver
+import socket
+from http import HTTPStatus
+from imcar.gui.helper import markdown_to_html
+from urllib.parse import unquote
+from importlib.resources import files
+
+class ReuseTCPServer(socketserver.TCPServer):
+    allow_reuse_address = True # Avoid port-in-use issues
+
+class ShellServer:
+    PORT = 40405
+    wrapped = None
+    server = None
+
+    class CustomAPIHandler(http.server.SimpleHTTPRequestHandler):
+        def __init__(self, request, client_address, server):
+            super().__init__(request, client_address, server)
+        
+        def do_POST(self):
+            assert len(self.path) > 2
+            assert self.path[0] == "/"
+
+            _, function, *args = self.path.split("/")
+            
+            if not ShellServer.is_valid_function(function):
+                self.send_response(HTTPStatus.NOT_FOUND)
+                return
+            
+            functionobject = getattr(ShellServer.wrapped, function)
+            
+            if not len(args) == len(functionobject.__annotations__):
+                self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
+                self.send_header("Content-Type", "text/plain")
+                self.end_headers()
+                self.wfile.write(bytes(str(f"Expected {functionobject.__annotations__.keys()}, got {repr(args)}").encode()))
+                return
+            
+            try:
+                parsed_args = [_type(unquote(arg)) for _type, arg in zip(functionobject.__annotations__.values(), args)]
+                result = functionobject(*parsed_args)
+            except Exception as e:
+                self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
+                self.send_header("Content-Type", "text/plain")
+                self.end_headers()
+                self.wfile.write(bytes(str(e).encode()))
+                return
+
+            self.send_response(HTTPStatus.OK)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(bytes(json.dumps(result).encode()))
+
+
+        def do_GET(self):
+            message = ""
+            if self.path != "/":
+                message = """
+**Path not found. To run a function, try submitting a POST request instead of a GET request.**  
+
+---
+
+"""
+
+            htmldoc = markdown_to_html(message + ShellServer.get_api_doc())
+
+            with open(files("imcar").joinpath("gui/shell_POST.html")) as f:
+                post_snippet = f.read()
+            
+            htmldoc = htmldoc.replace("<body>", "<body>" + post_snippet)
+
+            self.send_response(HTTPStatus.OK)
+            self.send_header("Content-Type", "	text/html")
+            self.end_headers()
+            self.wfile.write(bytes(htmldoc.encode()))
+
+    def run_tick():
+        assert ShellServer.server
+        ShellServer.server.handle_request()
+        return QtCore.QTimer.singleShot(10, ShellServer.run_tick)
+    
+    def start(wrapped):
+        ShellServer.wrapped = wrapped
+        ShellServer.server = ReuseTCPServer(("0.0.0.0", ShellServer.PORT), ShellServer.CustomAPIHandler)
+        ShellServer.server.timeout = 0
+        ShellServer.run_tick()
+    
+    def is_valid_function(name):
+        assert ShellServer.wrapped != None
+
+        return name in [
+            "untimed_start_selected_device",
+            "stop_selected_device",
+            "clear_events",
+            "get_selected_device_description",
+            "get_selected_device_state",
+            "new_snapshot",
+        ]
+        #return name and name in dir(ShellServer.wrapped) \
+        #    and callable(getattr(ShellServer.wrapped, name)) \
+        #    and name[0] != "_" \
+        #    and "callback" not in name
+
+    def get_api_doc():
+        assert ShellServer.wrapped != None
+
+        documentation = ""
+
+        for function in dir(ShellServer.wrapped):
+            if not ShellServer.is_valid_function(function):
+                continue
+            
+            functionobject = getattr(ShellServer.wrapped, function)
+            documentation += f"""`/{function}/{"/".join([f"<{x}>" for x in functionobject.__annotations__])}`
+
+Parameters:  """ + \
+            "\n".join([f"    {_param}: {_type}  " for _param, _type in functionobject.__annotations__.items()]) + \
+f"""
+
+Documentation:  
+```
+{functionobject.__doc__}  
+```
+
+---
+"""
+
+        return documentation
+
 class ShellLogger:
     def __init__(self, manager, shell_log):        
         decorate_log_calls(DataManager, self.log_calls)

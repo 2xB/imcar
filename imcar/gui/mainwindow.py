@@ -5,7 +5,6 @@ import sip
 import pyqtgraph as pg
 import numpy as np
 import faulthandler
-import markdown2
 import signal
 from importlib.resources import files
 
@@ -13,9 +12,9 @@ from mca_api.data import DataManager
 from mca_api.device import DeviceState
 
 from imcar.workers import FittingWorker
-from imcar.gui.helper import QHLine, mathTex_to_QPixmap, apply_dark_palette
+from imcar.gui.helper import QHLine, mathTex_to_QPixmap, apply_dark_palette, markdown_to_html
 from imcar.gui.device_config import DeviceConfig
-from imcar.gui.shell import ShellLogger
+from imcar.gui.shell import ShellLogger, ShellServer
 from imcar.gui.snapshot_save_dialog import *
 
 import _thread
@@ -49,6 +48,17 @@ class MCARec(QtWidgets.QMainWindow):
         # Shell
         # As early as possible to log as much as possible
         self.shell_widget = ShellLogger(self.mgr, self.shell_log)
+
+        # Start web server for programmatic access
+        try:
+            ShellServer.start(self.mgr)
+        except OSError as e:
+            QtWidgets.QMessageBox.critical(None, "Port in use", \
+                                        "Port 40405 is already in use. This is required for programmatic control of iMCAr. Maybe an instance of iMCAr is already running?")
+            sys.exit(-1)
+        # Show documentation
+        shell_doc = markdown_to_html(ShellServer.get_api_doc())
+        self.shell_commandoverview.setHtml(shell_doc)
         
         # Record timer
         self.record_timer = QtCore.QTimer(self)
@@ -277,11 +287,7 @@ class MCARec(QtWidgets.QMainWindow):
     def load_markdown(self, path):
         with open(relative_to_absolute_path(path), 'r') as doc:
             doc_text = doc.read()
-            doc_html = '<style type="text/css">'+\
-                          '  code { background-color: rgba(0, 0, 0, .2);font-weight: bold;}'+\
-                          ' </style>' + \
-                        markdown2.markdown(doc_text, extras=["tables", "fenced-code-blocks"])
-            return doc_html
+            return markdown_to_html(doc_text)
         
     def doc_display(self, path):
         Dialog = QtWidgets.QDialog(self)
@@ -472,7 +478,6 @@ class MCARec(QtWidgets.QMainWindow):
         if self.mgr.is_active_snapshot_live():
             self.snap_realtime.setChecked(True)
 
-        self.mgr.make_snapshot_names_unique()
         snapshots = self.mgr.get_snapshots()
         active_snapshot = self.mgr.get_active_snapshot()
         

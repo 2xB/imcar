@@ -283,7 +283,7 @@ class DataManager:
 
         self.callbacks_start.call()
     
-    def timed_start_selected_device(self, timing_time, timing_unit, timing_context):
+    def timed_start_selected_device(self, timing_time:float, timing_unit:int, timing_context:int):
         """
         Starts timed data taking on selected device.
         
@@ -355,7 +355,7 @@ class DataManager:
             return -1
         
         # Autosave to RAM
-        self.backup_record_info()
+        self.__backup_record_info()
 
         self.timing_current = self.timing_status()
         
@@ -393,7 +393,7 @@ class DataManager:
         
         self.record_info = None
         
-    def change_device_index(self, index):
+    def change_device_index(self, index:int):
         """
         Change the current device index.
         
@@ -460,7 +460,7 @@ class DataManager:
             return DeviceState.nonexistent
         return self.selected_device.state
         
-    def set_log_selected_device(self, enabled):
+    def set_log_selected_device(self, enabled:bool):
         """
         Activates/Deactivates logging for selected device.
         """
@@ -490,7 +490,7 @@ class DataManager:
         """
         return self.record_info
         
-    def new_snapshot(self, name=None):
+    def new_snapshot(self, name:str=None):
         """
         Append new snapshot to snapshots list.
         
@@ -500,11 +500,12 @@ class DataManager:
         snapshot = self.record_info.get_snapshot()
         snapshot.set_name(name)
         self.snapshots.append(snapshot)
-        self.backup_snapshots()
+        self.__backup_snapshots()
         
         self.callbacks_snapshots_changed.call()
+        return True
         
-    def remove_snapshot_by_id(self, _id):
+    def remove_snapshot_by_id(self, _id:int):
         """
         Remove a snapshot from snapshots list.
         """
@@ -521,7 +522,7 @@ class DataManager:
         if snapshot in self.visible_snapshots:
             self.visible_snapshots.remove(snapshot)
         
-        self.backup_snapshots()
+        self.__backup_snapshots()
         self.callbacks_snapshots_changed.call()
         
     def remove_all_snapshots(self):
@@ -532,10 +533,10 @@ class DataManager:
         self.snapshots.clear()
         self.visible_snapshots.clear()
         
-        self.backup_snapshots()
+        self.__backup_snapshots()
         self.callbacks_snapshots_changed.call()
         
-    def set_active_snapshot_id(self, id):
+    def set_active_snapshot_id(self, id:int):
         """
         Sets the active snapshot by id.
         """
@@ -544,7 +545,7 @@ class DataManager:
         else:
             self.active_snapshot = self.snapshots[id]
     
-    def toggle_visibility_snapshot_by_id(self, _id):
+    def toggle_visibility_snapshot_by_id(self, _id:int):
         snapshots = self.get_snapshots()
         if _id >= len(snapshots):
             print("Warning: Trying to toggle the visibility of a snapshot " +
@@ -579,6 +580,7 @@ class DataManager:
         """
         Get Snapshots.
         """
+        self.__make_snapshot_names_unique()
         return self.snapshots
         
     def get_fit_info(self):
@@ -617,11 +619,11 @@ class DataManager:
         """
         return self.last_region
 
-    def backup_record_info(self):
+    def __backup_record_info(self):
         if self.faultguard_data != None:
             self.faultguard_data["record_info"] = self.record_info
     
-    def backup_snapshots(self):
+    def __backup_snapshots(self):
         snapshots = self.get_snapshots()
         if self.faultguard_data != None:
             if "snapshot_count" in self.faultguard_data:
@@ -639,11 +641,9 @@ class DataManager:
             for i, snap in enumerate(snapshots):
                 self.faultguard_data[i] = snap
 
-    def make_snapshot_names_unique(self):
-        snapshots = self.get_snapshots()
-
+    def __make_snapshot_names_unique(self):
         namelist = []
-        for snapshot in snapshots:
+        for snapshot in self.snapshots:
             name = snapshot.get_name()
             unique_name_found = False
             name_prefix_id = 0

@@ -53,6 +53,7 @@ class QHLine(QtWidgets.QFrame):
         self.setFrameShadow(QtWidgets.QFrame.Sunken)
 
 # The following source code is adapted from user "Duncan" and the stackoverflow post https://stackoverflow.com/a/3467879/8575607 .
+import functools
 def decorate_log_calls(cls, callback):
     """
     Calls callback function on method calls to given class
@@ -62,6 +63,7 @@ def decorate_log_calls(cls, callback):
         callback: The callback function receiving name, args, kwargs and result of the executed function
     """
     def decorator(name, member):
+        @functools.wraps(member) # Ensure function signature etc. stays valid
         def wrapper(*args, **kwargs):
             if cls.__logcallwrap_block:
                 return member(*args, **kwargs)
@@ -191,3 +193,12 @@ def apply_dark_palette(app):
     dark_palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Text, QtCore.Qt.darkGray)
     dark_palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Light, QtGui.QColor(53, 53, 53))
     app.setPalette(dark_palette)
+
+
+import markdown2
+def markdown_to_html(markdown):
+    doc_html = '<style type="text/css">'+\
+                '  code { background-color: rgba(0, 0, 0, .2);font-weight: bold;}'+\
+                ' </style>' + \
+            markdown2.markdown(markdown, extras=["tables", "fenced-code-blocks"])
+    return "<!doctype html><html><body>"+doc_html+"</body></html>"
