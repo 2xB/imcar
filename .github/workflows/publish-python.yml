@@ -33,7 +33,7 @@ jobs:
       - name: Build executable
         run: |
           cd pyinstaller
-          pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --debug=all --noconfirm start.py
+          pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --debug=all --noconfirm launchimcar.py
 
       - name: ZIP result (Windows)
         if: runner.os == 'Windows'
