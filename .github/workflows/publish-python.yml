@@ -34,14 +34,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           cd pyinstaller
-          pyinstaller ^
-            --collect-all PyQt5 ^
-            --collect-all imcar ^
-            --name imcar ^
-            --onedir ^
-            --debug=all ^
-            --noconfirm ^
-            launchimcar.py
+          pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --debug=all --noconfirm launchimcar.py
           cd dist
           Compress-Archive -Path * -DestinationPath imcar-windows.zip
 
