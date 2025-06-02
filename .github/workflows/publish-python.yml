@@ -6,8 +6,9 @@ on:
   release:
     types: [published]
 
+# Ensure GH_TOKEN has permissions to upload artifact
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   release-build:
@@ -85,7 +86,7 @@ jobs:
           cd pyinstaller
           cd dist
           Compress-Archive -Path * -DestinationPath imcar-windows.zip
-          gh release upload $GITHUB_REF imcar-windows.zip
+          gh release upload ${{github.event.release.tag_name}} imcar-windows.zip
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -95,6 +96,6 @@ jobs:
           cd pyinstaller
           cd dist
           zip -r imcar-linux.zip *
-          gh release upload $GITHUB_REF imcar-linux.zip
+          gh release upload ${{github.event.release.tag_name}} imcar-linux.zip
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
