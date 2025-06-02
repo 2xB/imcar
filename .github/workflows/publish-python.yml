@@ -79,24 +79,18 @@ jobs:
           cd pyinstaller
           pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --noconfirm start.py
 
-          # ZIP result
-          cd dist
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            Compress-Archive -Path * -DestinationPath imcar-windows.zip
-          else
-            zip -r imcar-linux.zip *
-          fi
-
-      - name: Upload executable
+      - name: ZIP & upload result (Windows)
         if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v4
-        with:
-          name: imcar-executable-windows
-          path: dist/imcar-windows.zip
+        run: |
+          cd pyinstaller
+          cd dist
+          Compress-Archive -Path * -DestinationPath imcar-windows.zip
+          gh release upload $GITHUB_REF imcar-windows.zip
 
-      - name: Upload executable
+      - name: ZIP & upload result (Linux)
         if: runner.os != 'Windows'
-        uses: actions/upload-artifact@v4
-        with:
-          name: imcar-executable-linux
-          path: dist/imcar-linux.zip
+        run: |
+          cd pyinstaller
+          cd dist
+          zip -r imcar-linux.zip *
+          gh release upload $GITHUB_REF imcar-linux.zip
