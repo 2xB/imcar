@@ -21,10 +21,14 @@ def launch(faultguard_data, testing):
     """
 
     # Enable faulthandler to get trace route of e.g. segmentation faults
+    print("l1")
     faulthandler.enable()
+    print("l2")
 
     # Launch application
+    print("l3")
     mainwindow.main(faultguard_data, profiling = False, testing=testing)
+    print("l4")
 
 def rescue_from_crash(faultguard_data, exit_code, testing):
     """
@@ -33,7 +37,9 @@ def rescue_from_crash(faultguard_data, exit_code, testing):
     :param faultguard_data: Faultguard data dictionary
     :param testing: Indicates whether the program is executed for testing purposes.
     """
+    print("c1")
     rescue_dialog(faultguard_data, "iMCAr has crashed with exit code " + str(exit_code) + ".")
+    print("c2")
 
 def rescue_from_savefile(autosave_file):
     def rescue_from_savefile_callback(faultguard_data, autosave_file=autosave_file):
@@ -114,6 +120,7 @@ def main(testing=None):
     backupdir = os.path.join(userdir, "backup")
     os.makedirs(backupdir, exist_ok=True)
     
+    print("before rescue start")
     for name in os.listdir(backupdir):
         fullname = os.path.join(backupdir, name)
         
@@ -129,12 +136,18 @@ def main(testing=None):
         if faultguard.is_active(fullname):
             continue
         
+        print("r1")
         p = Process(target=rescue_from_savefile, args=(fullname, ))
+        print("r2")
         p.start()
+        print("r3")
         p.join()
+        print("r4")
     
     autosave_file = os.path.join(backupdir, time.strftime("%Y%m%d-%H%M%S") + ".xz")
+    print("before faultguard start")
     faultguard.start(launch, rescue_from_crash, args=(testing), autosave_interval=1*60, autosave_file=autosave_file)
+    print("after faultguard start")
 
 
 if __name__ == "__main__":

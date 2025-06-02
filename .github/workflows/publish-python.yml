@@ -54,9 +54,9 @@ jobs:
             --collect-all imcar \
             --name imcar \
             --onedir \
-            --debug=all \
             --noconfirm \
             --add-binary="/lib/x86_64-linux-gnu/libm.so.6:." \
+            --add-binary="/lib/x86_64-linux-gnu/libc.so.6:." \
             launchimcar.py
           cd dist
           zip -r imcar-linux.zip *
