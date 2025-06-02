@@ -30,15 +30,18 @@ jobs:
           pip install pyinstaller
           pip install .
 
-      - name: Build executable
-        run: |
-          cd pyinstaller
-          pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --debug=all --noconfirm launchimcar.py
-
-      - name: ZIP result (Windows)
+      - name: Build executable & ZIP result (Windows)
         if: runner.os == 'Windows'
         run: |
           cd pyinstaller
+          pyinstaller \
+            --collect-all PyQt5\
+            --collect-all imcar\
+            --name imcar \
+            --onedir \
+            --debug=all \
+            --noconfirm \
+            launchimcar.py
           cd dist
           Compress-Archive -Path * -DestinationPath imcar-windows.zip
 
@@ -46,13 +49,22 @@ jobs:
         uses: actions/upload-artifact@v4
         if: runner.os == 'Windows'
         with:
-          name: release-dists
+          name: imcar-windows
           path: pyinstaller/dist/imcar-windows.zip
 
-      - name: ZIP result (Linux)
+      - name: Build executable & ZIP result (Linux)
         if: runner.os != 'Windows'
         run: |
           cd pyinstaller
+          pyinstaller \
+            --collect-all PyQt5\
+            --collect-all imcar\
+            --name imcar \
+            --onedir \
+            --debug=all \
+            --noconfirm \
+            --add-binary="/lib/x86_64-linux-gnu/libm.so.6:." \
+            launchimcar.py
           cd dist
           zip -r imcar-linux.zip *
 
@@ -60,5 +72,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: runner.os != 'Windows'
         with:
-          name: release-dists
+          name: imcar-linux
           path: pyinstaller/dist/imcar-linux.zip
