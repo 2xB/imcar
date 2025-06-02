@@ -1,61 +1,16 @@
 # Based on https://github.com/actions/starter-workflows/blob/main/ci/python-publish.yml
 
-name: Upload Python Package
+name: Create executables
 
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - test-build
 
-# Ensure GH_TOKEN has permissions to upload artifact
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  release-build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Build release distributions
-        run: |
-          python -m pip install build
-          python -m build
-
-      - name: Upload distributions
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-dists
-          path: dist/
-
-  pypi-publish:
-    runs-on: ubuntu-latest
-    needs:
-      - release-build
-    permissions:
-      # IMPORTANT: this permission is mandatory for trusted publishing
-      id-token: write
-
-    environment:
-      name: pypi
-      url: https://pypi.org/p/imcar
-
-    steps:
-      - name: Retrieve release distributions
-        uses: actions/download-artifact@v4
-        with:
-          name: release-dists
-          path: dist/
-
-      - name: Publish release distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: dist/
-
   build-executables:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -78,7 +33,7 @@ jobs:
       - name: Build executable
         run: |
           cd pyinstaller
-          pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --noconfirm start.py
+          pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --debug=all --noconfirm start.py
 
       - name: ZIP & upload result (Windows)
         if: runner.os == 'Windows'
@@ -86,9 +41,13 @@ jobs:
           cd pyinstaller
           cd dist
           Compress-Archive -Path * -DestinationPath imcar-windows.zip
-          gh release upload ${{github.event.release.tag_name}} imcar-windows.zip
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload distributions (Windows)
+        uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
+        with:
+          name: release-dists
+          path: pyinstaller/dist/imcar-windows.zip
 
       - name: ZIP & upload result (Linux)
         if: runner.os != 'Windows'
@@ -96,6 +55,10 @@ jobs:
           cd pyinstaller
           cd dist
           zip -r imcar-linux.zip *
-          gh release upload ${{github.event.release.tag_name}} imcar-linux.zip
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload distributions (Linux)
+        uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
+        with:
+          name: release-dists
+          path: pyinstaller/dist/imcar-linux.zip
