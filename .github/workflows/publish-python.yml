@@ -58,7 +58,7 @@ jobs:
             --noconfirm \
             launchimcar.py
           cd dist
-          staticx imcar imcar_static
+          staticx imcar/imcar imcar/imcar_static
           zip -r imcar-linux.zip *
 
       - name: Upload distributions (Linux)
