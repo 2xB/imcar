@@ -19,12 +19,19 @@ requirements = [
     "faultguard>=1.1.1",
     ]
 
+# importing README as recommended in https://packaging.python.org/en/latest/guides/making-a-pypi-friendly-readme/
+from pathlib import Path
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
+
 setup(
     # Metadata
     name='imcar',
-    version='1.0.0',
-    author='Benedikt Bieringer',
-    author_email='2xB.coding@wwu.de',
+    version='1.0.1',
+    author='2xB',
+    author_email='2xB.coding@uni-muenster.de',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     # Package info
     packages=['imcar', 'imcar.app', 'imcar.gui', 'mca_api', 'mca_api.drivers'],
     install_requires=requirements,

@@ -1,10 +1,10 @@
-![iMCAr logo](design/logo/logo_wide.png)
+![iMCAr logo](https://raw.githubusercontent.com/2xB/imcar/main/design/logo/logo_wide.png)
 
 # iMCAr: The interactive MCA recorder
 
 This software provides a user-friendly application to use Multi-Channel Analyzers (MCA).
 
-![Screenshot of iMCAr with example data](screenshot.png)
+![Screenshot of iMCAr with example data](https://raw.githubusercontent.com/2xB/imcar/main/screenshot.png)
 
 ## Contributing
 If you e.g. develop your own drivers for iMCAr or extend the application in a different way, consider contributing the code back to this repository through a Pull Request! There is no guarantee that the changes are merged since they may go into a different direction than the original aim of the software, so before implementing a large change consider opening an issue suggesting that feature so it can be discussed beforehand.
