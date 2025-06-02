@@ -86,6 +86,8 @@ jobs:
           cd dist
           Compress-Archive -Path * -DestinationPath imcar-windows.zip
           gh release upload $GITHUB_REF imcar-windows.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: ZIP & upload result (Linux)
         if: runner.os != 'Windows'
@@ -94,3 +96,5 @@ jobs:
           cd dist
           zip -r imcar-linux.zip *
           gh release upload $GITHUB_REF imcar-linux.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
