@@ -35,7 +35,7 @@ jobs:
           cd pyinstaller
           pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --debug=all --noconfirm start.py
 
-      - name: ZIP & upload result (Windows)
+      - name: ZIP result (Windows)
         if: runner.os == 'Windows'
         run: |
           cd pyinstaller
@@ -49,7 +49,7 @@ jobs:
           name: release-dists
           path: pyinstaller/dist/imcar-windows.zip
 
-      - name: ZIP & upload result (Linux)
+      - name: ZIP result (Linux)
         if: runner.os != 'Windows'
         run: |
           cd pyinstaller
@@ -58,7 +58,7 @@ jobs:
 
       - name: Upload distributions (Linux)
         uses: actions/upload-artifact@v4
-        if: runner.os == 'Windows'
+        if: runner.os != 'Windows'
         with:
           name: release-dists
           path: pyinstaller/dist/imcar-linux.zip
