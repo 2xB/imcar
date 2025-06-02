@@ -34,7 +34,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           cd pyinstaller
-          pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --debug=all --noconfirm launchimcar.py
+          pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --noconfirm launchimcar.py
           cd dist
           Compress-Archive -Path * -DestinationPath imcar-windows.zip
 
@@ -48,6 +48,7 @@ jobs:
       - name: Build executable & ZIP result (Linux)
         if: runner.os != 'Windows'
         run: |
+          pip install staticx
           cd pyinstaller
           pyinstaller \
             --collect-all PyQt5 \
@@ -55,10 +56,9 @@ jobs:
             --name imcar \
             --onedir \
             --noconfirm \
-            --add-binary="/lib/x86_64-linux-gnu/libm.so.6:." \
-            --add-binary="/lib/x86_64-linux-gnu/libc.so.6:." \
             launchimcar.py
           cd dist
+          staticx imcar imcar_static
           zip -r imcar-linux.zip *
 
       - name: Upload distributions (Linux)
