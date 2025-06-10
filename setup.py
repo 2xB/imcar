@@ -13,7 +13,7 @@ requirements = [
     "scipy",
     "uncertainties",
     "pyusb",
-    "PyQt5<=5.15.5",
+    "PyQt5",
     "pyqtgraph",
     "markdown2",
     "faultguard>=1.1.1",
