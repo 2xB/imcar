@@ -67,6 +67,7 @@ jobs:
           python-standalone/bin/python3 -m pip install .
           cd pyinstaller
           ../python-standalone/bin/python3 -m PyInstaller \
+            --log-level=DEBUG \
             --collect-all PyQt5 \
             --collect-all imcar \
             --name imcar \
