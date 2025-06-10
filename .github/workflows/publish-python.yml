@@ -67,7 +67,12 @@ jobs:
         run: |
           export PATH=$PWD/python-standalone/bin:$PATH
           python-standalone/bin/python3 -m pip install --no-cache-dir --upgrade pip
-          python-standalone/bin/python3 -m pip install --no-cache-dir --upgrade pyinstaller
+          
+          git clone https://github.com/pyinstaller/pyinstaller.git pyinstaller-package
+          cd pyinstaller-package
+          ../python-standalone/bin/python3 -m pip install --no-cache-dir .
+          cd ..
+          
           python-standalone/bin/python3 -m pip install --no-cache-dir .
           cd pyinstaller
           ../python-standalone/bin/python3 -m PyInstaller \
