@@ -47,6 +47,10 @@ jobs:
       - name: Download python-build-standalone (Linux)
         if: runner.os != 'Windows'
         run: |
+          sudo apt update
+          sudo apt upgrade
+          sudo apt install -y libxkbcommon-x11-0 libegl1
+        
           meta=$(curl -s https://raw.githubusercontent.com/astral-sh/python-build-standalone/latest-release/latest-release.json)
           tag=$(echo "$meta" | python3 -c "import sys, json; print(json.load(sys.stdin)['tag'])")
           prefix=$(echo "$meta" | python3 -c "import sys, json; print(json.load(sys.stdin)['asset_url_prefix'])")
