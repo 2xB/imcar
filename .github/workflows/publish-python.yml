@@ -63,11 +63,13 @@ jobs:
         run: |
           export PATH=$PWD/python-standalone/bin:$PATH
           python-standalone/bin/python3 -m pip install --upgrade pip
-          python-standalone/bin/python3 -m pip install pyinstaller
+          python-standalone/bin/python3 -m pip install --upgrade pyinstaller
           python-standalone/bin/python3 -m pip install .
+          python-standalone/bin/python3 -m pip install --upgrade pyqtgraph
           cd pyinstaller
           ../python-standalone/bin/python3 -m PyInstaller \
             --log-level=DEBUG \
+            --debug=all \
             --collect-all PyQt5 \
             --collect-all imcar \
             --name imcar \
