@@ -49,11 +49,12 @@ jobs:
           sudo apt install -y flatpak-builder
           sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
           sudo flatpak install -y org.freedesktop.Sdk/x86_64/21.08 org.freedesktop.Platform/x86_64/21.08
-          flatpak-builder --force-clean --install --user build-dir flatpak/imcar.flatpak.json
+          flatpak-builder --force-clean --repo=imcar-repo build-dir flatpak/imcar.flatpak.json
+          flatpak build-bundle imcar-repo imcar.flatpak io.github.zweigs.imcar stable --runtime
 
       - name: Upload Flatpak package (Linux)
         uses: actions/upload-artifact@v4
         if: runner.os != 'Windows'
         with:
           name: imcar-flatpak
-          path: build-dir/*.flatpak
+          path: imcar.flatpak

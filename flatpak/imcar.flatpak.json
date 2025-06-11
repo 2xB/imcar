@@ -4,13 +4,14 @@
   "runtime-version": "21.08",
   "sdk": "org.freedesktop.Sdk",
   "command": "imcar",
+  "branch": "stable",
   "modules": [
     {
       "name": "imcar",
       "buildsystem": "simple",
       "build-commands": [
-        "python -m venv .",
-        "source bin/activate && pip3 install --no-cache-dir . && mkdir /app/bin && ln -s `which imcar` /app/bin/imcar"
+        "python -m venv /app",
+        "source /app/bin/activate && pip3 install --no-cache-dir ."
       ],
       "build-options": {
         "build-args": [

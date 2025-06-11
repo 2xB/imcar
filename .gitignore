@@ -1,3 +1,9 @@
+# Flatpak
+.flatpak-builder
+build-dir
+imcar-repo
+imcar.flatpak
+
 # Swap files
 *.swp
 *.kate-swp
