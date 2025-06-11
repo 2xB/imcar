@@ -1,0 +1,31 @@
+{
+  "app-id": "io.github.zweigs.imcar",
+  "runtime": "org.freedesktop.Platform",
+  "runtime-version": "21.08",
+  "sdk": "org.freedesktop.Sdk",
+  "command": "imcar",
+  "modules": [
+    {
+      "name": "imcar",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python -m venv .",
+        "source bin/activate && pip3 install --no-cache-dir . && mkdir /app/bin && ln -s `which imcar` /app/bin/imcar"
+      ],
+      "build-options": {
+        "build-args": [
+          "--share=network"
+        ]
+      },
+      "build-dependencies": [
+        "python3-pip"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": ".."
+        }
+      ]
+    }
+  ]
+}

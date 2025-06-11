@@ -1,5 +1,3 @@
-# Based on https://github.com/actions/starter-workflows/blob/main/ci/python-publish.yml
-
 name: Create executables
 
 on:
@@ -44,52 +42,18 @@ jobs:
           name: imcar-windows
           path: pyinstaller/dist/imcar-windows.zip
 
-      - name: Download python-build-standalone (Linux)
+      - name: Build Flatpak package (Linux)
         if: runner.os != 'Windows'
         run: |
           sudo apt update
-          sudo apt upgrade
-          sudo apt install -y libgl1
-        
-          meta=$(curl -s https://raw.githubusercontent.com/astral-sh/python-build-standalone/latest-release/latest-release.json)
-          tag=$(echo "$meta" | python3 -c "import sys, json; print(json.load(sys.stdin)['tag'])")
-          prefix=$(echo "$meta" | python3 -c "import sys, json; print(json.load(sys.stdin)['asset_url_prefix'])")
-          file=$(curl -s https://api.github.com/repos/astral-sh/python-build-standalone/releases/tags/${tag} | \
-            python3 -c "import sys, json; print([a['name'] for a in json.load(sys.stdin)['assets'] if a['name'].startswith('cpython-3.13') and 'x86_64-unknown-linux-gnu-install_only.tar.gz' in a['name']][0])")
-          url="${prefix}/${file}"
-          echo "Download: $url"
-          curl -L -o python.tar.zst "$url"
-          mkdir python-standalone
-          tar --use-compress-program=unzstd -xf python.tar.zst -C python-standalone --strip-components=1
+          sudo apt install -y flatpak-builder
+          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          sudo flatpak install -y org.freedesktop.Sdk/x86_64/21.08 org.freedesktop.Platform/x86_64/21.08
+          flatpak-builder --force-clean --install --user build-dir flatpak/imcar.flatpak.json
 
-      - name: Build executable & ZIP result (Linux)
-        if: runner.os != 'Windows'
-        run: |
-          export PATH=$PWD/python-standalone/bin:$PATH
-          python-standalone/bin/python3 -m pip install --no-cache-dir --upgrade pip
-          
-          git clone https://github.com/pyinstaller/pyinstaller.git pyinstaller-package
-          cd pyinstaller-package
-          ../python-standalone/bin/python3 -m pip install --no-cache-dir .
-          cd ..
-          
-          python-standalone/bin/python3 -m pip install --no-cache-dir .
-          cd pyinstaller
-          ../python-standalone/bin/python3 -m PyInstaller \
-            --log-level=DEBUG \
-            --debug=all \
-            --collect-all PyQt5 \
-            --collect-all imcar \
-            --name imcar \
-            --onedir \
-            --noconfirm \
-            launchimcar.py
-          cd dist
-          zip -r imcar-linux.zip *
-
-      - name: Upload distributions (Linux)
+      - name: Upload Flatpak package (Linux)
         uses: actions/upload-artifact@v4
         if: runner.os != 'Windows'
         with:
-          name: imcar-linux
-          path: pyinstaller/dist/imcar-linux.zip
+          name: imcar-flatpak
+          path: build-dir/*.flatpak
