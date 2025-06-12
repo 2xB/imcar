@@ -5,6 +5,15 @@
   "sdk": "org.kde.Sdk",
   "command": "imcar",
   "branch": "stable",
+  "finish-args": [
+    "--socket=wayland",
+    "--socket=fallback-x11",
+    "--device=dri",
+    "--share=ipc",
+    "--share=network",
+    "--filesystem=home",
+    "--device=usb"
+  ],
   "modules": [
     {
       "name": "imcar",
