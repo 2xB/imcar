@@ -7,7 +7,7 @@
   "branch": "stable",
   "finish-args": [
     "--socket=wayland",
-    "--socket=fallback-x11",
+    "--socket=x11",
     "--device=all",
     "--share=ipc",
     "--share=network",
