@@ -8,11 +8,10 @@
   "finish-args": [
     "--socket=wayland",
     "--socket=fallback-x11",
-    "--device=dri",
+    "--device=all",
     "--share=ipc",
     "--share=network",
-    "--filesystem=home",
-    "--device=usb"
+    "--filesystem=home"
   ],
   "modules": [
     {
