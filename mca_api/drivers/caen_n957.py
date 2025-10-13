@@ -33,6 +33,7 @@ class CaenN957MCA(DeviceMCA):
     name = "Caen N957"
     internal_memory = False
     timing_internal = False # Indicates whether timed runs are stopped by device
+    buffer_size = 16384
 
     @staticmethod
     def find():
@@ -167,7 +168,6 @@ class CaenN957MCA(DeviceMCA):
             raise ValueError("Trying to read events from a stopped device.")
         if self.state == DeviceState.quit:
             raise ValueError("Trying to read events from a quitted device.")
-        buffer_size = self.properties.buffer_value.current_value
         count = 0
         try:
             count = Util.to_int(self.get_value(0x0c))
@@ -178,13 +178,13 @@ class CaenN957MCA(DeviceMCA):
             return []
         events = np.array([], dtype=int)
         if count != 0:
-            self.set_value(0x07, buffer_size)
+            self.set_value(0x07, self.buffer_size)
             events_raw = bytearray()
-            new_len = buffer_size
-            max_iterations = math.ceil(buffer_size*2/16384)
+            new_len = self.buffer_size
+            max_iterations = math.ceil(self.buffer_size*2/16384)
             for i in range(0,max_iterations):
                 try:
-                    new_events = bytearray(self.dev.read(0x86, buffer_size))
+                    new_events = bytearray(self.dev.read(0x86, self.buffer_size))
                     events_raw.extend(new_events)
                     if len(new_events) < 16384:
                         break;
@@ -272,9 +272,8 @@ class CaenN957MCA(DeviceMCA):
         
 
 class CaenN957Properties(EmptyProperties):
-    buffer_value = PropertyInt("Buffer size", 1, 39321, 16384)
     mode = PropertyDict("Gate Mode", {"Auto":3, "Ext. Gate":1}, "Auto")
-    indirect = [buffer_value, mode]
+    indirect = [mode]
 
     threshold = PropertyInt("Set Threshold", 1, 99, 10, CaenN957MCA._set_threshold, unset_at_start=True)
     direct = [threshold]                     
