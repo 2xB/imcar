@@ -1,5 +1,5 @@
 import time
-import datetime
+from datetime import datetime
 import numpy as np
 import copy
 import math
@@ -200,14 +200,14 @@ class CaenN957MCA(DeviceMCA):
                 except usb.core.USBError as e:
                     all_events_read = True
                     break
-            if count < len(events_raw)>>1:
-                self.log("[EVENTCOUNT] MCA announced " + str(count) + " events, but " + str(len(events_raw)) + "/2 received",level=0)
+            if count != len(events_raw)>>1:
+                self.log("[EVENTCOUNT] MCA announced " + str(count) + " events, but " + str(len(events_raw)/2) + " received",level=0)
             for j in range(len(events_raw)>>1):
                 events = np.append(events, Util.to_int(events_raw[j*2:j*2+2])>>3)
             if all_events_read:
                 break
             
-        self.log(f"[EVENTSTATISTICS] Timestamp: {datetime.now()}, read {len(events)} events")
+        self.log(f"[EVENTSTATISTICS] Timestamp: {datetime.now()}, read {len(events)} events", level=0)
         self.log("[EVENTS] " + ' '.join(map(str, events)), level=0)
         events = events[events<self.channel_count]
                 # Ignore values that are invalid if "sliding scale" is enabled
