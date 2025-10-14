@@ -27,7 +27,7 @@ long_description = (this_directory / "README.md").read_text()
 setup(
     # Metadata
     name='imcar',
-    version='1.0.5',
+    version='1.0.6',
     author='2xB',
     author_email='2xB.coding@uni-muenster.de',
     long_description=long_description,
