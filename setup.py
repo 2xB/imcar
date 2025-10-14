@@ -14,7 +14,7 @@ requirements = [
     "uncertainties",
     "pyusb",
     "PyQt5",
-    "pyqtgraph",
+    "pyqtgraph>=0.13.1",
     "markdown2",
     "faultguard>=1.1.1",
     ]
