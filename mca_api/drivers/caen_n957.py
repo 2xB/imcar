@@ -201,7 +201,7 @@ class CaenN957MCA(DeviceMCA):
                     all_events_read = True
                     break
             if count != len(events_raw)>>1:
-                self.log("[EVENTCOUNT] MCA announced " + str(count) + " events, but " + str(len(events_raw)/2) + " received",level=0)
+                self.log(f"[EVENTCOUNT] MCA announced {count} events, but {len(events_raw)/2} received", level=0)
             for j in range(len(events_raw)>>1):
                 events = np.append(events, Util.to_int(events_raw[j*2:j*2+2])>>3)
             if all_events_read:
