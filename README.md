@@ -16,7 +16,7 @@ Be careful!
 
 ## Installation
 
-For this software Python has to be installed and part of the PATH variable. The software is tested with Python 3.8.2. The Windows installer wizard asks at the beginning, if it should edit the PATH. Possibly at the end of the installation the adjustment of its length has to be accepted.
+For this software Python has to be installed and part of the PATH variable. For that, Python's Windows install wizard conveniently offers to edit the PATH at the beginning. Under Windows, possibly at the end of the installation the adjustment of the PATH length has to be accepted.
 
 Many Linux distributions ship Python 3 as "python3" with "pip3" (opposed to "python" and "pip"). If that does not work, the commands have to be entered without the number 3.
 
