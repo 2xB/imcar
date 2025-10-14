@@ -178,7 +178,7 @@ class MCARec(QtWidgets.QMainWindow):
         color = np.array([color.red(), color.green(), color.blue(), color.alpha()])/256
         self.pixmaps_fit = [mathTex_to_QPixmap("$f(x)=\\frac{a}{\\sigma \\sqrt{2\\pi}}\\cdot e^{-\\frac{1}{2} \\left(\\frac{x-\\mu}{\\sigma}\\right)^2}$", fs, color),
                             mathTex_to_QPixmap("$f(x)=\\frac{a}{\\sigma \\sqrt{2\\pi}}\\cdot e^{-\\frac{1}{2} \\left(\\frac{x-\\mu}{\\sigma}\\right)^2}+b$", fs, color),
-                            mathTex_to_QPixmap("$f(x)=\\frac{a}{\\sigma \\sqrt{2\\pi}}\\cdot e^{-\\frac{1}{2} \\left(\\frac{x-\\mu}{\\sigma}\\right)^2}+m\cdot x + b$", fs, color)]
+                            mathTex_to_QPixmap("$f(x)=\\frac{a}{\\sigma \\sqrt{2\\pi}}\\cdot e^{-\\frac{1}{2} \\left(\\frac{x-\\mu}{\\sigma}\\right)^2}+m\\cdot x + b$", fs, color)]
 
         # Init Snap Fit Labels
         self.snap_index_change()
