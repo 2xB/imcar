@@ -1,5 +1,5 @@
 import time
-import datetime
+from datetime import datetime
 import numpy as np
 import copy
 import math
@@ -33,6 +33,7 @@ class CaenN957MCA(DeviceMCA):
     name = "Caen N957"
     internal_memory = False
     timing_internal = False # Indicates whether timed runs are stopped by device
+    buffer_size = 16384
 
     @staticmethod
     def find():
@@ -167,33 +168,46 @@ class CaenN957MCA(DeviceMCA):
             raise ValueError("Trying to read events from a stopped device.")
         if self.state == DeviceState.quit:
             raise ValueError("Trying to read events from a quitted device.")
-        buffer_size = self.properties.buffer_value.current_value
-        count = 0
-        try:
-            count = Util.to_int(self.get_value(0x0c))
-            self.log("[EVENTCOUNT] Counted " + str(count) + " events",level=0)
-        except usb.core.USBError as e:
-            self.log("[READ_EVENTSERROR]"+str(e))
-            self.activate_error()
-            return []
+        
         events = np.array([], dtype=int)
-        if count != 0:
-            self.set_value(0x07, buffer_size)
+
+        # Reading up to 16384 events (buffer_size) per iteration. In total, the device can
+        # store up to 64 kEvents according to its documentation (approx. 4x buffer_size).
+        # Reading up to 5x buffer_size since maybe events are recorded in between readout.
+        for i in range(5):
+            count = 0
+            try:
+                count = Util.to_int(self.get_value(0x0c))
+                self.log("[EVENTCOUNT] Counted " + str(count) + " events",level=0)
+            except usb.core.USBError as e:
+                self.log("[READ_EVENTSERROR]"+str(e))
+                self.activate_error()
+                return []
+            if count == 0:
+                break
+
+            self.set_value(0x07, self.buffer_size)
             events_raw = bytearray()
-            new_len = buffer_size
-            max_iterations = math.ceil(buffer_size*2/16384)
+            max_iterations = math.ceil(self.buffer_size*2/16384)
+            all_events_read = False
             for i in range(0,max_iterations):
                 try:
-                    new_events = bytearray(self.dev.read(0x86, buffer_size))
+                    new_events = bytearray(self.dev.read(0x86, self.buffer_size))
                     events_raw.extend(new_events)
                     if len(new_events) < 16384:
-                        break;
+                        all_events_read = True
+                        break
                 except usb.core.USBError as e:
-                    break;
-            if count < len(events_raw)>>1:
-                self.log("[EVENTCOUNT] MCA announced " + str(count) + " events, but " + str(len(events_raw)) + "/2 received",level=0)
+                    all_events_read = True
+                    break
+            if count != len(events_raw)>>1:
+                self.log(f"[EVENTCOUNT] MCA announced {count} events, but {len(events_raw)/2} received", level=0)
             for j in range(len(events_raw)>>1):
                 events = np.append(events, Util.to_int(events_raw[j*2:j*2+2])>>3)
+            if all_events_read:
+                break
+            
+        self.log(f"[EVENTSTATISTICS] Timestamp: {datetime.now()}, read {len(events)} events", level=0)
         self.log("[EVENTS] " + ' '.join(map(str, events)), level=0)
         events = events[events<self.channel_count]
                 # Ignore values that are invalid if "sliding scale" is enabled
@@ -272,9 +286,8 @@ class CaenN957MCA(DeviceMCA):
         
 
 class CaenN957Properties(EmptyProperties):
-    buffer_value = PropertyInt("Buffer size", 1, 39321, 16384)
     mode = PropertyDict("Gate Mode", {"Auto":3, "Ext. Gate":1}, "Auto")
-    indirect = [buffer_value, mode]
+    indirect = [mode]
 
     threshold = PropertyInt("Set Threshold", 1, 99, 10, CaenN957MCA._set_threshold, unset_at_start=True)
     direct = [threshold]                     
