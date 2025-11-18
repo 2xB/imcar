@@ -1,1 +1,5 @@
-pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --noconfirm start.py
+#!/bin/bash
+# Build imcar executable using PyInstaller
+# This script uses imcar.spec for configuration
+
+pyinstaller imcar.spec

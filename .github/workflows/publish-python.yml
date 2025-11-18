@@ -69,6 +69,20 @@ jobs:
         with:
           python-version: "3.10"
 
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-render-util0 \
+            libxcb-xinerama0 \
+            libxcb-xkb1 \
+            libxcb-shape0 \
+            libxkbcommon-x11-0
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -78,7 +92,7 @@ jobs:
       - name: Build executable
         run: |
           cd pyinstaller
-          pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --noconfirm start.py
+          pyinstaller imcar.spec
 
       - name: ZIP & upload result (Windows)
         if: runner.os == 'Windows'
