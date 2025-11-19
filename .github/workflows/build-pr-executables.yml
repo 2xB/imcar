@@ -16,11 +16,52 @@ permissions:
   contents: read
 
 jobs:
-  build-executables:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-20.04, windows-latest]
+  build-linux:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:20.04
+      options: --user root
+    
+    steps:
+      - name: Install dependencies in container
+        run: |
+          apt-get update
+          apt-get install -y \
+            git \
+            python3.10 \
+            python3-pip \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-render-util0 \
+            libxcb-xinerama0 \
+            libxcb-xkb1 \
+            libxcb-shape0 \
+            libxkbcommon-x11-0 \
+            zip
+      
+      - uses: actions/checkout@v4
+
+      - name: Install Python dependencies
+        run: |
+          python3.10 -m pip install --upgrade pip
+          python3.10 -m pip install pyinstaller
+          python3.10 -m pip install .
+
+      - name: Build executable
+        run: |
+          cd pyinstaller
+          python3.10 -m PyInstaller imcar.spec
+
+      - name: Upload executable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: imcar-linux
+          path: pyinstaller/dist/imcar/
+          retention-days: 30
+
+  build-windows:
+    runs-on: windows-latest
     
     steps:
       - uses: actions/checkout@v4
@@ -29,20 +70,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-
-      - name: Install system dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libxcb-icccm4 \
-            libxcb-image0 \
-            libxcb-keysyms1 \
-            libxcb-render-util0 \
-            libxcb-xinerama0 \
-            libxcb-xkb1 \
-            libxcb-shape0 \
-            libxkbcommon-x11-0
 
       - name: Install dependencies
         run: |
@@ -55,18 +82,9 @@ jobs:
           cd pyinstaller
           pyinstaller imcar.spec
 
-      - name: Upload executable artifact (Windows)
-        if: runner.os == 'Windows'
+      - name: Upload executable artifact
         uses: actions/upload-artifact@v4
         with:
           name: imcar-windows
-          path: pyinstaller/dist/imcar/
-          retention-days: 30
-
-      - name: Upload executable artifact (Linux)
-        if: runner.os != 'Windows'
-        uses: actions/upload-artifact@v4
-        with:
-          name: imcar-linux
           path: pyinstaller/dist/imcar/
           retention-days: 30

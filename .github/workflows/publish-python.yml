@@ -56,24 +56,20 @@ jobs:
         with:
           packages-dir: dist/
 
-  build-executables:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-20.04, windows-latest]
+  build-linux-executable:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:20.04
+      options: --user root
+    
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install system dependencies (Linux)
-        if: runner.os == 'Linux'
+      - name: Install dependencies in container
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          apt-get update
+          apt-get install -y \
+            git \
+            python3.10 \
+            python3-pip \
             libxcb-icccm4 \
             libxcb-image0 \
             libxcb-keysyms1 \
@@ -81,7 +77,47 @@ jobs:
             libxcb-xinerama0 \
             libxcb-xkb1 \
             libxcb-shape0 \
-            libxkbcommon-x11-0
+            libxkbcommon-x11-0 \
+            zip \
+            curl
+      
+      - uses: actions/checkout@v4
+
+      - name: Install Python dependencies
+        run: |
+          python3.10 -m pip install --upgrade pip
+          python3.10 -m pip install pyinstaller
+          python3.10 -m pip install .
+
+      - name: Build executable
+        run: |
+          cd pyinstaller
+          python3.10 -m PyInstaller imcar.spec
+
+      - name: ZIP & upload result
+        run: |
+          cd pyinstaller/dist
+          zip -r imcar-linux.zip *
+          # Install GitHub CLI in container
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          apt-get update
+          apt-get install -y gh
+          gh release upload ${{github.event.release.tag_name}} imcar-linux.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-windows-executable:
+    runs-on: windows-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
@@ -94,22 +130,10 @@ jobs:
           cd pyinstaller
           pyinstaller imcar.spec
 
-      - name: ZIP & upload result (Windows)
-        if: runner.os == 'Windows'
+      - name: ZIP & upload result
         run: |
-          cd pyinstaller
-          cd dist
+          cd pyinstaller/dist
           Compress-Archive -Path * -DestinationPath imcar-windows.zip
           gh release upload ${{github.event.release.tag_name}} imcar-windows.zip
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: ZIP & upload result (Linux)
-        if: runner.os != 'Windows'
-        run: |
-          cd pyinstaller
-          cd dist
-          zip -r imcar-linux.zip *
-          gh release upload ${{github.event.release.tag_name}} imcar-linux.zip
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
