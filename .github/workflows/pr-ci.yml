@@ -34,28 +34,16 @@ jobs:
           cd pyinstaller
           pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --noconfirm start.py
 
-      - name: ZIP result (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          cd pyinstaller/dist
-          Compress-Archive -Path * -DestinationPath imcar-windows.zip
-
-      - name: ZIP result (Linux)
-        if: runner.os != 'Windows'
-        run: |
-          cd pyinstaller/dist
-          zip -r imcar-linux.zip *
-
       - name: Upload executable artifact (Windows)
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: imcar-windows
-          path: pyinstaller/dist/imcar-windows.zip
+          path: pyinstaller/dist/
 
       - name: Upload executable artifact (Linux)
         if: runner.os != 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: imcar-linux
-          path: pyinstaller/dist/imcar-linux.zip
+          path: pyinstaller/dist/
