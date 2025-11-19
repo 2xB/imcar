@@ -1,0 +1,84 @@
+# Build executables for pull requests to enable testing before release
+name: Build PR Executables
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'imcar/**'
+      - 'mca_api/**'
+      - 'pyinstaller/**'
+      - 'setup.py'
+      - '.github/workflows/build-pr-executables.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-executables:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-render-util0 \
+            libxcb-xinerama0 \
+            libxcb-xkb1 \
+            libxcb-shape0 \
+            libxkbcommon-x11-0
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install .
+
+      - name: Build executable
+        run: |
+          cd pyinstaller
+          pyinstaller imcar.spec
+
+      - name: ZIP result (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd pyinstaller/dist
+          Compress-Archive -Path * -DestinationPath imcar-windows.zip
+
+      - name: ZIP result (Linux)
+        if: runner.os != 'Windows'
+        run: |
+          cd pyinstaller/dist
+          zip -r imcar-linux.zip *
+
+      - name: Upload executable artifact (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: imcar-windows
+          path: pyinstaller/dist/imcar-windows.zip
+          retention-days: 30
+
+      - name: Upload executable artifact (Linux)
+        if: runner.os != 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: imcar-linux
+          path: pyinstaller/dist/imcar-linux.zip
+          retention-days: 30
