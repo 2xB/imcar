@@ -40,7 +40,7 @@ The executable will be created in `dist/imcar/`.
 
 ## Known Limitations
 
-- **Linux**: May have GLIBC version compatibility issues on older distributions. The executable is built against the system where PyInstaller runs.
+- **Linux**: The executable requires GLIBC 2.31 or newer (compatible with Ubuntu 20.04+, Debian 11+, and similar). For maximum compatibility, builds are created on Ubuntu 20.04. Systems with older GLIBC versions may encounter errors like `GLIBC_2.31' not found`.
 - **Both platforms**: The executable bundles all dependencies, resulting in large file sizes (100-200MB).
 
 ## Recommended Installation for End Users
