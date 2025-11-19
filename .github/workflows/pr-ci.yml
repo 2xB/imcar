@@ -1,0 +1,61 @@
+# PR CI Pipeline - Build executables for pull requests
+
+name: PR CI - Build Executables
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  build-executables:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install .
+
+      - name: Build executable
+        run: |
+          cd pyinstaller
+          pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --noconfirm start.py
+
+      - name: ZIP result (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd pyinstaller/dist
+          Compress-Archive -Path * -DestinationPath imcar-windows.zip
+
+      - name: ZIP result (Linux)
+        if: runner.os != 'Windows'
+        run: |
+          cd pyinstaller/dist
+          zip -r imcar-linux.zip *
+
+      - name: Upload executable artifact (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: imcar-windows
+          path: pyinstaller/dist/imcar-windows.zip
+
+      - name: Upload executable artifact (Linux)
+        if: runner.os != 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: imcar-linux
+          path: pyinstaller/dist/imcar-linux.zip
