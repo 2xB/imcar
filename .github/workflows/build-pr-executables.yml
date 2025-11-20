@@ -24,8 +24,6 @@ jobs:
     
     steps:
       - name: Install dependencies in container
-        # Avoid tzdata interactive timezone selection using environment variables
-        # See e.g. https://serverfault.com/questions/949991/how-to-install-tzdata-on-a-ubuntu-docker-image
         run: |
           apt-get update
           apt-get install -y \
