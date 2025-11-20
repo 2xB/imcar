@@ -80,9 +80,6 @@ jobs:
             libxkbcommon-x11-0 \
             zip \
             curl
-        env:
-          DEBIAN_FRONTEND: noninteractive
-          TZ: Europe/Berlin
       
       - uses: actions/checkout@v4
 

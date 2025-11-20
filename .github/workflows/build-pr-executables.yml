@@ -39,9 +39,6 @@ jobs:
             libxcb-shape0 \
             libxkbcommon-x11-0 \
             zip
-        env:
-          DEBIAN_FRONTEND: noninteractive
-          TZ: Europe/Berlin
       
       - uses: actions/checkout@v4
 
