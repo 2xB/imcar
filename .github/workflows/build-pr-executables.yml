@@ -41,6 +41,7 @@ jobs:
             zip
         env:
           TZ: Europe/Berlin
+          DEBIAN_FRONTEND: noninteractive
       
       - uses: actions/checkout@v4
 
