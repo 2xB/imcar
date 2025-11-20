@@ -46,8 +46,27 @@ The executable will be created in `dist/imcar/`.
 ## CI/CD Build Process
 
 The GitHub Actions workflows build executables using:
-- **Linux**: Ubuntu 20.04 Docker container on ubuntu-latest runners (maintains GLIBC 2.31 compatibility)
+- **Linux**: Custom Docker image built from `.github/Dockerfile.ubuntu20.04` (Ubuntu 20.04 base with Python 3.10 and all XCB dependencies pre-installed)
 - **Windows**: windows-latest runners with Python 3.10
+
+### Building with Docker (Linux)
+
+For reproducible builds matching the CI environment:
+
+```bash
+# Build the Docker image
+docker build -t imcar-builder:ubuntu20.04 -f .github/Dockerfile.ubuntu20.04 .
+
+# Build the executable
+docker run --rm -v $(pwd):/workspace -w /workspace imcar-builder:ubuntu20.04 bash -c "
+  python3.10 -m pip install pyinstaller && \
+  python3.10 -m pip install . && \
+  cd pyinstaller && \
+  python3.10 -m PyInstaller imcar.spec
+"
+```
+
+The executable will be created in `pyinstaller/dist/imcar/`.
 
 ## Recommended Installation for End Users
 

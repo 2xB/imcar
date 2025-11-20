@@ -58,55 +58,31 @@ jobs:
 
   build-linux-executable:
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
-      options: --user root
     
     steps:
-      - name: Install dependencies in container
-        run: |
-          apt-get update
-          apt-get install -y \
-            git \
-            python3.10 \
-            python3-pip \
-            libxcb-icccm4 \
-            libxcb-image0 \
-            libxcb-keysyms1 \
-            libxcb-render-util0 \
-            libxcb-xinerama0 \
-            libxcb-xkb1 \
-            libxcb-shape0 \
-            libxkbcommon-x11-0 \
-            zip \
-            curl
-        env:
-          TZ: Europe/Berlin
-          DEBIAN_FRONTEND: noninteractive
-      
       - uses: actions/checkout@v4
 
-      - name: Install Python dependencies
+      - name: Build Docker image
         run: |
-          python3.10 -m pip install --upgrade pip
-          python3.10 -m pip install pyinstaller
-          python3.10 -m pip install .
+          docker build -t imcar-builder:ubuntu20.04 -f .github/Dockerfile.ubuntu20.04 .
 
-      - name: Build executable
+      - name: Build executable in Docker container
         run: |
-          cd pyinstaller
-          python3.10 -m PyInstaller imcar.spec
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            imcar-builder:ubuntu20.04 \
+            bash -c "
+              python3.10 -m pip install pyinstaller && \
+              python3.10 -m pip install . && \
+              cd pyinstaller && \
+              python3.10 -m PyInstaller imcar.spec
+            "
 
       - name: ZIP & upload result
         run: |
           cd pyinstaller/dist
           zip -r imcar-linux.zip *
-          # Install GitHub CLI in container
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-          chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-          apt-get update
-          apt-get install -y gh
           gh release upload ${{github.event.release.tag_name}} imcar-linux.zip
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

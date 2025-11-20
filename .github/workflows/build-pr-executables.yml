@@ -18,43 +18,26 @@ permissions:
 jobs:
   build-linux:
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
-      options: --user root
     
     steps:
-      - name: Install dependencies in container
-        run: |
-          apt-get update
-          apt-get install -y \
-            git \
-            python3.10 \
-            python3-pip \
-            libxcb-icccm4 \
-            libxcb-image0 \
-            libxcb-keysyms1 \
-            libxcb-render-util0 \
-            libxcb-xinerama0 \
-            libxcb-xkb1 \
-            libxcb-shape0 \
-            libxkbcommon-x11-0 \
-            zip
-        env:
-          TZ: Europe/Berlin
-          DEBIAN_FRONTEND: noninteractive
-      
       - uses: actions/checkout@v4
 
-      - name: Install Python dependencies
+      - name: Build Docker image
         run: |
-          python3.10 -m pip install --upgrade pip
-          python3.10 -m pip install pyinstaller
-          python3.10 -m pip install .
+          docker build -t imcar-builder:ubuntu20.04 -f .github/Dockerfile.ubuntu20.04 .
 
-      - name: Build executable
+      - name: Build executable in Docker container
         run: |
-          cd pyinstaller
-          python3.10 -m PyInstaller imcar.spec
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            imcar-builder:ubuntu20.04 \
+            bash -c "
+              python3.10 -m pip install pyinstaller && \
+              python3.10 -m pip install . && \
+              cd pyinstaller && \
+              python3.10 -m PyInstaller imcar.spec
+            "
 
       - name: Upload executable artifact
         uses: actions/upload-artifact@v4
