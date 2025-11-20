@@ -67,8 +67,6 @@ jobs:
         # Avoid tzdata interactive timezone selection using environment variables
         # See e.g. https://serverfault.com/questions/949991/how-to-install-tzdata-on-a-ubuntu-docker-image
         run: |
-          export DEBIAN_FRONTEND="noninteractive"
-          export TZ="Europe/Berlin"
           apt-get update
           apt-get install -y \
             git \
@@ -84,6 +82,9 @@ jobs:
             libxkbcommon-x11-0 \
             zip \
             curl
+        env:
+          DEBIAN_FRONTEND: noninteractive
+          TZ: Europe/Berlin
       
       - uses: actions/checkout@v4
 
