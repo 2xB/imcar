@@ -39,6 +39,8 @@ jobs:
             libxcb-shape0 \
             libxkbcommon-x11-0 \
             zip
+        env:
+          TZ: Europe/Berlin
       
       - uses: actions/checkout@v4
 
