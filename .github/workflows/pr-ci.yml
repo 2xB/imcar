@@ -11,39 +11,6 @@ permissions:
 
 jobs:
   build-executables:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pyinstaller
-          pip install .
-
-      - name: Build executable
-        run: |
-          cd pyinstaller
-          pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --noconfirm start.py
-
-      - name: Upload executable artifact (Windows)
-        if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v4
-        with:
-          name: imcar-windows
-          path: pyinstaller/dist/
-
-      - name: Upload executable artifact (Linux)
-        if: runner.os != 'Windows'
-        uses: actions/upload-artifact@v4
-        with:
-          name: imcar-linux
-          path: pyinstaller/dist/
+    uses: ./.github/workflows/build-executables-reusable.yml
+    with:
+      upload_type: artifact

@@ -1,0 +1,75 @@
+# Reusable workflow for building executables
+# This workflow can be called from both PR CI and release workflows
+
+name: Build Executables (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      upload_type:
+        description: 'Type of upload: "artifact" for PR builds, "release" for release builds'
+        required: true
+        type: string
+      release_tag:
+        description: 'Release tag name (only used when upload_type is "release")'
+        required: false
+        type: string
+
+jobs:
+  build-executables:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install .
+
+      - name: Build executable
+        run: |
+          cd pyinstaller
+          pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --noconfirm start.py
+
+      # Artifact upload for PR builds
+      - name: Upload executable artifact (Windows)
+        if: inputs.upload_type == 'artifact' && runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: imcar-windows
+          path: pyinstaller/dist/
+
+      - name: Upload executable artifact (Linux)
+        if: inputs.upload_type == 'artifact' && runner.os != 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: imcar-linux
+          path: pyinstaller/dist/
+
+      # Release upload for release builds
+      - name: ZIP & upload result (Windows)
+        if: inputs.upload_type == 'release' && runner.os == 'Windows'
+        run: |
+          cd pyinstaller/dist
+          Compress-Archive -Path * -DestinationPath imcar-windows.zip
+          gh release upload ${{ inputs.release_tag }} imcar-windows.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: ZIP & upload result (Linux)
+        if: inputs.upload_type == 'release' && runner.os != 'Windows'
+        run: |
+          cd pyinstaller/dist
+          zip -r imcar-linux.zip *
+          gh release upload ${{ inputs.release_tag }} imcar-linux.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
