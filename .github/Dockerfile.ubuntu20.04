@@ -19,7 +19,6 @@ RUN apt-get update && apt-get install -y \
     && apt-get update \
     && apt-get install -y \
     python3.10 \
-    python3.10-distutils \
     python3-pip \
     # XCB libraries required for Qt xcb platform plugin
     libxcb-icccm4 \
