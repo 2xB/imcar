@@ -56,11 +56,40 @@ jobs:
         with:
           packages-dir: dist/
 
-  build-executables:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
+  build-linux-executable:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -t imcar-builder:ubuntu20.04 -f .github/Dockerfile.ubuntu20.04 .
+
+      - name: Build executable in Docker container
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            imcar-builder:ubuntu20.04 \
+            bash -c "
+              python3.10 -m pip install pyinstaller && \
+              python3.10 -m pip install . && \
+              cd pyinstaller && \
+              python3.10 -m PyInstaller imcar.spec
+            "
+
+      - name: ZIP & upload result
+        run: |
+          cd pyinstaller/dist
+          zip -r imcar-linux.zip *
+          gh release upload ${{github.event.release.tag_name}} imcar-linux.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-windows-executable:
+    runs-on: windows-latest
+    
     steps:
       - uses: actions/checkout@v4
 
@@ -78,24 +107,12 @@ jobs:
       - name: Build executable
         run: |
           cd pyinstaller
-          pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --noconfirm start.py
+          pyinstaller imcar.spec
 
-      - name: ZIP & upload result (Windows)
-        if: runner.os == 'Windows'
+      - name: ZIP & upload result
         run: |
-          cd pyinstaller
-          cd dist
+          cd pyinstaller/dist
           Compress-Archive -Path * -DestinationPath imcar-windows.zip
           gh release upload ${{github.event.release.tag_name}} imcar-windows.zip
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: ZIP & upload result (Linux)
-        if: runner.os != 'Windows'
-        run: |
-          cd pyinstaller
-          cd dist
-          zip -r imcar-linux.zip *
-          gh release upload ${{github.event.release.tag_name}} imcar-linux.zip
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
