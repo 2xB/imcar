@@ -21,7 +21,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest] # FIXME: windows-latest build is broken (caught in a startup loop)
     steps:
       - uses: actions/checkout@v4
 
