@@ -4,7 +4,8 @@
 Test script to verify the built executable launches a GUI successfully.
 
 This script launches the application in testing mode and verifies that
-the main window appears. It is designed to run in CI environments with
+the main window appears by checking for the shell server that starts
+when the GUI is created. It is designed to run in CI environments with
 a virtual display (xvfb on Linux).
 """
 
@@ -13,11 +14,17 @@ import sys
 import os
 import time
 import platform
+import socket
+import urllib.request
+import urllib.error
 
 
 # Timeout constants (can be overridden via environment variables)
-STARTUP_TIMEOUT = int(os.environ.get("GUI_TEST_STARTUP_TIMEOUT", "10"))
+STARTUP_TIMEOUT = int(os.environ.get("GUI_TEST_STARTUP_TIMEOUT", "30"))
 TERMINATION_TIMEOUT = int(os.environ.get("GUI_TEST_TERMINATION_TIMEOUT", "5"))
+
+# Port used by the shell server (started when GUI opens)
+SHELL_SERVER_PORT = 40405
 
 
 def find_executable():
@@ -35,14 +42,34 @@ def find_executable():
     return exe_path
 
 
+def check_gui_server_running():
+    """
+    Check if the GUI's shell server is running by attempting to connect.
+    
+    The iMCAr application starts a web server on port 40405 when the GUI
+    opens. This is a reliable way to verify the GUI has actually started.
+    
+    Returns:
+        bool: True if the server is responding, False otherwise
+    """
+    try:
+        # Try to connect to the shell server
+        url = f"http://localhost:{SHELL_SERVER_PORT}/"
+        with urllib.request.urlopen(url, timeout=2) as response:
+            # If we get any response, the server is running
+            return response.status == 200
+    except (urllib.error.URLError, socket.timeout, ConnectionRefusedError, OSError):
+        return False
+
+
 def test_executable_launches_gui():
     """
     Test that the executable launches and creates a GUI window.
     
     This test:
     1. Launches the executable with --test flag
-    2. Waits for the application to start
-    3. Verifies the process is running
+    2. Waits for the GUI's shell server to become available on port 40405
+    3. Verifies the server responds (proving GUI has opened)
     4. Terminates the process
     """
     exe_path = find_executable()
@@ -62,10 +89,11 @@ def test_executable_launches_gui():
     
     print(f"Process started with PID: {process.pid}")
     
-    # Wait for the application to initialize
-    # Give it some time to start up and create the window
-    print(f"Waiting {STARTUP_TIMEOUT} seconds for application to start...")
+    # Wait for the GUI's shell server to become available
+    # The shell server starts when the main window is created
+    print(f"Waiting up to {STARTUP_TIMEOUT}s for GUI shell server on port {SHELL_SERVER_PORT}...")
     
+    gui_opened = False
     for i in range(STARTUP_TIMEOUT):
         time.sleep(1)
         
@@ -80,18 +108,37 @@ def test_executable_launches_gui():
                 f"stderr: {stderr}"
             )
         
-        print(f"  ... {i + 1}/{STARTUP_TIMEOUT}s - Process still running")
+        # Check if GUI server is responding
+        if check_gui_server_running():
+            print(f"  ... {i + 1}s - GUI shell server is responding!")
+            gui_opened = True
+            break
+        else:
+            print(f"  ... {i + 1}/{STARTUP_TIMEOUT}s - Waiting for GUI...")
     
-    # Verify process is still running after startup time
-    if process.poll() is None:
-        print("SUCCESS: Application is running after startup period")
-    else:
-        stdout, stderr = process.communicate()
+    if not gui_opened:
+        # Process is still running but GUI server never responded
+        stdout_partial = ""
+        stderr_partial = ""
+        try:
+            process.terminate()
+            stdout_partial, stderr_partial = process.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
+        except Exception:
+            # Handle any other cleanup errors
+            process.kill()
+            process.wait()
+        
         raise RuntimeError(
-            f"Application exited during startup\n"
-            f"stdout: {stdout}\n"
-            f"stderr: {stderr}"
+            f"GUI shell server did not respond within {STARTUP_TIMEOUT}s.\n"
+            f"The application is running but the GUI may not have opened.\n"
+            f"stdout: {stdout_partial}\n"
+            f"stderr: {stderr_partial}"
         )
+    
+    print("SUCCESS: GUI has opened and shell server is responding")
     
     # Clean up - terminate the process
     print("Terminating application...")
