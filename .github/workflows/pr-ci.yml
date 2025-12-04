@@ -1,0 +1,16 @@
+# PR CI Pipeline - Build executables for pull requests
+
+name: PR CI - Build Executables
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  build-executables:
+    uses: ./.github/workflows/build-executables-reusable.yml
+    with:
+      upload_type: artifact

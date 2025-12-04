@@ -57,45 +57,7 @@ jobs:
           packages-dir: dist/
 
   build-executables:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pyinstaller
-          pip install .
-
-      - name: Build executable
-        run: |
-          cd pyinstaller
-          pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --noconfirm start.py
-
-      - name: ZIP & upload result (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          cd pyinstaller
-          cd dist
-          Compress-Archive -Path * -DestinationPath imcar-windows.zip
-          gh release upload ${{github.event.release.tag_name}} imcar-windows.zip
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: ZIP & upload result (Linux)
-        if: runner.os != 'Windows'
-        run: |
-          cd pyinstaller
-          cd dist
-          zip -r imcar-linux.zip *
-          gh release upload ${{github.event.release.tag_name}} imcar-linux.zip
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: ./.github/workflows/build-executables-reusable.yml
+    with:
+      upload_type: release
+      release_tag: ${{ github.event.release.tag_name }}

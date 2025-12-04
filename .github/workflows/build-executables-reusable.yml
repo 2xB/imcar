@@ -1,0 +1,94 @@
+# Reusable workflow for building executables
+# This workflow can be called from both PR CI and release workflows
+# Note: Permissions are inherited from the calling workflow
+
+name: Build Executables (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      upload_type:
+        description: 'Type of upload: "artifact" for PR builds, "release" for release builds'
+        required: true
+        type: string
+      release_tag:
+        description: 'Release tag name (only used when upload_type is "release")'
+        required: false
+        type: string
+
+jobs:
+  build-executables:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest] # FIXME: windows-latest build is broken (caught in a startup loop)
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install .
+
+      - name: Build executable
+        run: |
+          cd pyinstaller
+          pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --noconfirm start.py
+
+      # Test that the executable launches a GUI (Linux only - requires xvfb)
+      - name: Install xvfb (Linux)
+        if: runner.os != 'Windows'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 x11-utils
+
+      - name: Test executable launches GUI (Linux)
+        if: runner.os != 'Windows'
+        run: |
+          export QT_QPA_PLATFORM=xcb
+          xvfb-run -a python tests/test_executable_gui_launch.py
+
+      - name: Test executable launches GUI (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          python tests/test_executable_gui_launch.py
+
+      # Artifact upload for PR builds
+      - name: Upload executable artifact (Windows)
+        if: inputs.upload_type == 'artifact' && runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: imcar-windows
+          path: pyinstaller/dist/
+
+      - name: Upload executable artifact (Linux)
+        if: inputs.upload_type == 'artifact' && runner.os != 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: imcar-linux
+          path: pyinstaller/dist/
+
+      # Release upload for release builds
+      - name: ZIP & upload result (Windows)
+        if: inputs.upload_type == 'release' && runner.os == 'Windows'
+        run: |
+          cd pyinstaller/dist
+          Compress-Archive -Path * -DestinationPath imcar-windows.zip
+          gh release upload ${{ inputs.release_tag }} imcar-windows.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: ZIP & upload result (Linux)
+        if: inputs.upload_type == 'release' && runner.os != 'Windows'
+        run: |
+          cd pyinstaller/dist
+          zip -r imcar-linux.zip *
+          gh release upload ${{ inputs.release_tag }} imcar-linux.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
