@@ -1,5 +1,6 @@
 # Reusable workflow for building executables
 # This workflow can be called from both PR CI and release workflows
+# Note: Permissions are inherited from the calling workflow
 
 name: Build Executables (Reusable)
 
@@ -14,9 +15,6 @@ on:
         description: 'Release tag name (only used when upload_type is "release")'
         required: false
         type: string
-
-permissions:
-  contents: write
 
 jobs:
   build-executables:
