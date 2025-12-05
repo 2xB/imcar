@@ -33,7 +33,10 @@ def main(faultguard_data=None, profiling = False, testing = False):
     app.exec_()
 
 def init_qt_app():
-    app = QtWidgets.QApplication([sys.argv])
+    # Enable OpenGL context sharing to prevent COM errors on Windows
+    # when running in a multiprocessing spawned process
+    QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
+    app = QtWidgets.QApplication(sys.argv)
     apply_dark_palette(app)
     app.setWindowIcon(QtGui.QIcon(os.path.join(os.path.dirname(__file__), 'icon.png')))
     return app
