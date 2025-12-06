@@ -1,5 +1,6 @@
 import sys
 import os
+import platform
 from PyQt5 import QtCore, QtWidgets, QtGui, uic
 import sip
 import pyqtgraph as pg
@@ -33,8 +34,13 @@ def main(faultguard_data=None, profiling = False, testing = False):
     app.exec_()
 
 def init_qt_app():
-    # Enable OpenGL context sharing to prevent COM errors on Windows
-    # when running in a multiprocessing spawned process
+    # On Windows frozen executables, disable accessibility to prevent COM errors
+    # (0x8001010d) that can occur when accessibility services interact with Qt's
+    # COM interface. This only affects frozen Windows builds.
+    if platform.system() == "Windows" and getattr(sys, 'frozen', False):
+        os.environ.setdefault("QT_ACCESSIBILITY", "0")
+    
+    # Enable OpenGL context sharing to prevent additional COM threading issues
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
     app = QtWidgets.QApplication(sys.argv)
     apply_dark_palette(app)
