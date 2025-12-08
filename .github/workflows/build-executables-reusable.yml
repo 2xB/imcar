@@ -41,6 +41,12 @@ jobs:
           cd pyinstaller
           pyinstaller --collect-all PyQt5 --collect-all imcar --name imcar --onedir --noconfirm start.py
 
+      - name: Make executable static with staticx
+        if: runner.os != 'Windows'
+        run: |
+          pip install staticx
+          staticx pyinstaller/dist/imcar/imcar pyinstaller/dist/imcar/imcar-static
+
       # Test that the executable launches a GUI (Linux only - requires xvfb)
       - name: Install xvfb (Linux)
         if: runner.os != 'Windows'
