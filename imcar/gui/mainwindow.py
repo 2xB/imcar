@@ -40,9 +40,7 @@ def init_qt_app():
     if platform.system() == "Windows" and getattr(sys, 'frozen', False):
         os.environ.setdefault("QT_ACCESSIBILITY", "0")
     
-    # Enable OpenGL context sharing to prevent additional COM threading issues
-    QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
-    app = QtWidgets.QApplication(sys.argv)
+    app = QtWidgets.QApplication([sys.argv])
     apply_dark_palette(app)
     app.setWindowIcon(QtGui.QIcon(os.path.join(os.path.dirname(__file__), 'icon.png')))
     return app

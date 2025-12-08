@@ -1,5 +1,4 @@
 import sys
-import platform
 
 import faulthandler
 from PyQt5 import QtWidgets
@@ -93,10 +92,6 @@ def rescue_dialog_nodata(message):
                                         "as much information as possible - including the terminal output - on the GitLab project page:\n"+\
                                         "https://github.com/2xB/imcar .")
 
-def _is_windows_frozen():
-    """Check if running as a frozen executable on Windows."""
-    return platform.system() == "Windows" and getattr(sys, 'frozen', False)
-
 def main(testing=None):
     """
     Start MCA Recorder application.
@@ -114,14 +109,6 @@ def main(testing=None):
     
     if testing is None:
         testing = "--test" in sys.argv
-    
-    # On Windows frozen executables, bypass faultguard due to COM/multiprocessing
-    # compatibility issues. The subprocess spawning causes Qt COM threading errors.
-    if _is_windows_frozen():
-        print("Running as Windows executable - faultguard disabled for compatibility.")
-        faulthandler.enable()
-        mainwindow.main(None, profiling=False, testing=testing)
-        return
     
     userdir = utils.user_data_dir("imcar")
     backupdir = os.path.join(userdir, "backup")
