@@ -2,7 +2,7 @@ import sys
 
 import faulthandler
 from PyQt5 import QtWidgets
-from multiprocessing import Process
+from multiprocessing import Process, freeze_support
 import os
 import time
 
@@ -98,6 +98,11 @@ def main(testing=None):
 
     Wraps application launch to show a message on crash.
     """
+
+    # Provide entry point for the faultguard subprocess in case the application is frozen
+    # https://pyinstaller.org/en/stable/common-issues-and-pitfalls.html#multi-processing
+    freeze_support()
+
     print("imcar [--test]")
     print("   --test: Enable test devices for development purposes")
     print()
