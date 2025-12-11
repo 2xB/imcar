@@ -153,6 +153,9 @@ jobs:
     needs: [test-linux-debian11, test-linux-ubuntu]
     runs-on: ubuntu-latest
     steps:
+      # Check out git repository so "gh upload" can get repository information
+      - uses: actions/checkout@v4
+
       - name: Download Linux executable
         uses: actions/download-artifact@v4
         with:
