@@ -16,11 +16,19 @@ Be careful!
 
 ## Installation
 
-For this software Python has to be installed and part of the PATH variable. For that, Python's Windows install wizard conveniently offers to edit the PATH at the beginning. Under Windows, possibly at the end of the installation the adjustment of the PATH length has to be accepted.
+### Pre-built binaries (experimental)
+
+Experimentally, with each GitHub release, pre-compiled binaries are shipped [with each GitHub release](https://github.com/2xB/imcar/releases) that can be launched without installing Python or any dependencies. As always, please report any issues regarding them in the issue tracker.
+
+Linux binaries require a system with GLIBC version of (currently) at least 2.31, which should cover all major current Linux distributions.
+
+### Python package
+
+This software can also be installed as a Python package, for which Python has to be installed and part of the PATH variable. For that, Python's Windows install wizard conveniently offers to edit the PATH at the beginning. Under Windows, possibly at the end of the installation the adjustment of the PATH length has to be accepted.
 
 Many Linux distributions ship Python 3 as "python3" with "pip3" (opposed to "python" and "pip"). If that does not work, the commands have to be entered without the number 3.
 
-After downloading the application, in the folder with this README.md file the following commands have to be executed:
+After downloading the source code, in the folder with this README.md file the following commands have to be executed:
 
 ```
 pip3 install --upgrade setuptools
@@ -77,7 +85,7 @@ faultguard: <https://github.com/2xB/faultguard>
 faultguard was initially developed for this project.
 
 ## Currently supported MCAs
-As a design principle, this software has no dependencies to binaries from third partys such as MCA manufacturers. This allows the software to be platform independent and open source, but also makes it necessary to reverse engineer every MCA USB protocol for every supported product. If you are a vendor or want to contribute out of other reasons, please get in touch by e.g. creating an github issue with your contact address.
+As a design principle, this software has no dependencies to binaries from third partys such as MCA manufacturers. This allows the software to be platform independent and open source, but also makes it necessary to reverse engineer every MCA USB protocol for every supported product. If you are a vendor or want to contribute out of other reasons, please get in touch by e.g. creating a GitHub issue with your contact address.
 
 
 | Name             &nbsp;| Vendor ID   &nbsp;| Product ID    &nbsp;| Data Transfer Type   &nbsp;| Notes                            |
