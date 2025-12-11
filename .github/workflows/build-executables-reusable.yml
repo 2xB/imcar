@@ -87,8 +87,17 @@ jobs:
       - name: Upload Linux executable artifact for testing
         uses: actions/upload-artifact@v4
         with:
-          name: imcar-linux-build
+          name: imcar-linux
           path: pyinstaller/dist/
+
+      - name: ZIP & upload result (Linux)
+        if: inputs.upload_type == 'release'
+        run: |
+          cd pyinstaller/dist
+          zip -r imcar-linux.zip *
+          gh release upload ${{ inputs.release_tag }} imcar-linux.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   test-linux-debian11:
     needs: build-linux
@@ -107,7 +116,7 @@ jobs:
       - name: Download Linux executable
         uses: actions/download-artifact@v4
         with:
-          name: imcar-linux-build
+          name: imcar-linux
           path: pyinstaller/dist/
 
       - name: Make executable runnable
@@ -138,7 +147,7 @@ jobs:
       - name: Download Linux executable
         uses: actions/download-artifact@v4
         with:
-          name: imcar-linux-build
+          name: imcar-linux
           path: pyinstaller/dist/
 
       - name: Make executable runnable
@@ -148,35 +157,3 @@ jobs:
         run: |
           export QT_QPA_PLATFORM=xcb
           xvfb-run -a python3 tests/test_executable_gui_launch.py
-
-  finalize-linux:
-    needs: [test-linux-debian11, test-linux-ubuntu]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download Linux executable
-        uses: actions/download-artifact@v4
-        with:
-          name: imcar-linux-build
-          path: pyinstaller/dist/
-
-      # Artifact upload for PR builds
-      - name: Upload executable artifact (Linux)
-        if: inputs.upload_type == 'artifact'
-        uses: actions/upload-artifact@v4
-        with:
-          name: imcar-linux
-          path: pyinstaller/dist/
-
-      # Release upload for release builds
-      - name: Install zip for release
-        if: inputs.upload_type == 'release'
-        run: sudo apt-get update && sudo apt-get install -y zip
-
-      - name: ZIP & upload result (Linux)
-        if: inputs.upload_type == 'release'
-        run: |
-          cd pyinstaller/dist
-          zip -r imcar-linux.zip *
-          gh release upload ${{ inputs.release_tag }} imcar-linux.zip
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
